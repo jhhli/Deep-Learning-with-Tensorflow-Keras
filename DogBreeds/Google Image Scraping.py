@@ -1,5 +1,5 @@
 from selenium import webdriver
-driver_path = 'C:/Users/Jenny/Desktop/chromedriver'
+driver_path = 'C:/Users/Jiahu/Desktop/chromedriver'
 wd = webdriver.Chrome(executable_path=driver_path)
 
 import time

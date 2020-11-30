@@ -1,4 +1,4 @@
-# this code build VGG16 like CNN model from scratch
+# this code use VGG16 model with its weights in convolutional layers
 
 import os
 os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
@@ -44,43 +44,37 @@ validation_generator = train_datagen.flow_from_directory(
 # build a model
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPool2D , Flatten, BatchNormalization, Dropout
+from keras.applications import VGG16
+from keras.applications.resnet50 import ResNet50
+from keras import Model
 
-VGG_16 = Sequential()
-VGG_16.add(Conv2D(input_shape=(224,224,3),filters=64,kernel_size=(3,3),padding="same", activation="relu"))
-VGG_16.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
-VGG_16.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+model = ResNet50(
+    weights='imagenet',  # Load weights pre-trained on ImageNet.
+    input_shape=(224, 224, 3),
+    include_top=False)
 
+for layer in model.layers:
+    layer.trainable = False
 
-VGG_16.add(Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+last = model.output
 
+x = Flatten()(last)
+x = Dense(2048, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Dense(2048, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Dense(2048, activation='relu')(x)
+x = BatchNormalization()(x)
+predictions = Dense(23, activation='softmax')(x)
 
-VGG_16.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+# this is the model we will train
+model = Model(inputs=model.input, outputs=predictions)
 
-VGG_16.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-VGG_16.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+model.summary()
 
-VGG_16.add(Flatten())
-
-VGG_16.add(Dense(1024,activation="relu"))
-VGG_16.add(Dense(512,activation="relu"))
-VGG_16.add(Dense(128,activation="relu"))
-
-
-VGG_16.add(Dense(23, activation="softmax"))
-
-VGG_16.summary()
-
-# Compile model
+# compile model
 from keras import optimizers
-
-VGG_16.compile(loss='categorical_crossentropy',
+model.compile(loss='categorical_crossentropy',
           optimizer=optimizers.Adam(lr=0.001),
           metrics=['acc'])
 
@@ -105,12 +99,11 @@ learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc',
                                             factor=0.2, 
                                             min_lr=0.0000001)
 
-
 # fit/train model
 
 nb_epochs = 20
 
-history = VGG_16.fit_generator(
+history = model.fit_generator(
     train_generator,
     steps_per_epoch = train_generator.samples // batch_size,
     validation_data = validation_generator, 
@@ -118,16 +111,21 @@ history = VGG_16.fit_generator(
     epochs = nb_epochs,
     callbacks = [checkpoint, early_stop, learning_rate_reduction])
 
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.applications.vgg16 import preprocess_input
+from keras.applications.vgg16 import decode_predictions
 
+# load an image from file
+image = load_img('C:/Users/Jiahu/Desktop/images/IMG-7629.jpg', target_size=(224, 224))
+# convert the image pixels to a numpy array
+image = img_to_array(image)
+# reshape data for the model
+image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+# prepare the image for the VGG model
+image = preprocess_input(image)
 
-
-
-
-
-
-
-
-
-
-
-
+import numpy as np
+yhat = model.predict(image)
+print(list(train_generator.class_indices.keys())[list(train_generator.class_indices.values()).index(np.argmax(yhat[0]))]) 
+print(np.max(yhat[0]*100), '%')
