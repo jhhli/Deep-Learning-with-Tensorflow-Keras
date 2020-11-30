@@ -2,11 +2,11 @@
 
 ## TensorFlow is tested and supported on the following 64-bit systems:
 
-###Python 3.5–3.8
-###Ubuntu 16.04 or later
-###Windows 7 or later (with C++ redistributable)
-###macOS 10.12.6 (Sierra) or later (no GPU support)
-###Raspbian 9.0 or later
+### Python 3.5–3.8
+### Ubuntu 16.04 or later
+### Windows 7 or later (with C++ redistributable)
+### macOS 10.12.6 (Sierra) or later (no GPU support)
+### Raspbian 9.0 or later
 
 ## Install libraries as requirments.txt in the venv
 
@@ -18,20 +18,20 @@ pip install tf-nightly, pandas, matplotlib, keras
 
 ### plaindML Windows installation
 
-1 First install Chocolatey by starting an Administrator PowerShell and running:
+#### 1 First install Chocolatey by starting an Administrator PowerShell and running:
 
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
-2 Install Python:
+#### 2 Install Python:
 
 choco install -y python git vcredist2015
 
-3 Switch to an unprivileged PowerShell to install and set up PlaidML with Keras
+#### 3 Switch to an unprivileged PowerShell to install and set up PlaidML with Keras
 
 pip install -U plaidml-keras
 plaidml-setup
 
-4 PlaidML should now be installed! You can test the installation by running MobileNet in plaidbench.
+#### 4 PlaidML should now be installed! You can test the installation by running MobileNet in plaidbench.
 
 pip install plaidml-keras plaidbench
 plaidbench keras mobilenet
